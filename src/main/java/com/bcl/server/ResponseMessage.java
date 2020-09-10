@@ -6,10 +6,12 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Scanner;
 
+/**
+ * Handles sending responses to clients
+ */
 public class ResponseMessage {
     private SimpleDateFormat date = new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss z"); // Used for adding time to the headers
-
-    private PrintWriter outputPrintWriter;
+    private PrintWriter outputPrintWriter; // PrintWriter for writing data to the socket output
     private Socket socket;
 
     public ResponseMessage(Socket os) {
@@ -21,6 +23,11 @@ public class ResponseMessage {
         }
     }
 
+    /**
+     * Writes the headers to the response
+     * @param statusCode The status code of the response (E.G. 200, 404)
+     * @param contentType The content type of the response (E.G. text/html, text/css)
+     */
     private void writeHeaders(int statusCode, String contentType) {
         outputPrintWriter.print("HTTP/1.1 "+statusCode+" OK\r\n");
         outputPrintWriter.print("Date: " + date.format(new Date()) + "\r\n");
@@ -29,15 +36,19 @@ public class ResponseMessage {
         outputPrintWriter.print("Transfer-Encoding: chunked\r\n\r\n");
     }
 
+    /**
+     * Write a single line to the socket
+     * @param line The line to write
+     */
     private void writeLineToSocket(String line) {
         outputPrintWriter.print(Integer.toHexString(line.length()) + "\r\n");
         outputPrintWriter.print(line + "\r\n");
     }
 
-    public void sendText(int statusCode, String data) {
-        this.writeHeaders(statusCode, "text/plain");
-        outputPrintWriter.print(Integer.toHexString(data.length()) + "\r\n");
-        outputPrintWriter.print(data + "\r\n");
+    /**
+     * Write the final line, and close the socket, sending the data
+     */
+    private void closeSocket() {
         outputPrintWriter.print("0\r\n\r\n");
         outputPrintWriter.close();
         try {
@@ -47,43 +58,50 @@ public class ResponseMessage {
         }
     }
 
-    public void sendHtml(String fileToSend) {
-        File file = new File(fileToSend);
+    /**
+     * Send plain text to the client
+     * @param statusCode The status code of the response
+     * @param text The text to send
+     */
+    public void sendText(int statusCode, String text) {
+        this.writeHeaders(statusCode, "text/plain");
+        writeLineToSocket(text);
+        this.closeSocket();
+    }
 
-        if (file.canRead() && file.exists()) {
+    /**
+     * Send HTML file to the client
+     * @param fileToSend The HTML file to send
+     */
+    public void sendHtml(File fileToSend) {
+        if (fileToSend.canRead() && fileToSend.exists()) {
             try {
                 Scanner scanner = null;
-                scanner = new Scanner(file);
+                scanner = new Scanner(fileToSend);
 
                 this.writeHeaders(200, "text/html");
                 while (scanner.hasNextLine()) {
                     writeLineToSocket(scanner.nextLine());
                 }
-                outputPrintWriter.print("0\r\n\r\n");
-                outputPrintWriter.close();
                 scanner.close();
-                socket.close();
+                this.closeSocket();
             } catch (FileNotFoundException e) {
                 e.printStackTrace();
                 sendText(404, "File not found");
-            } catch (IOException e) {
-                e.printStackTrace();
             }
         } else {
-            System.out.println("The file " + file.getAbsolutePath() + " either does not exist or cannot be read");
+            System.out.println("The file " + fileToSend.getAbsolutePath() + " either does not exist or cannot be read");
             sendText(404, "File not found");
         }
     }
 
+    /**
+     * Send a simple resposne back
+     * @param statusCode The status code of the response
+     */
     public void send(int statusCode) {
         this.writeHeaders(statusCode, "text/plain");
-        outputPrintWriter.print("0\r\n\r\n");
-        outputPrintWriter.close();
-        try {
-            socket.close();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        this.closeSocket();
     }
 
 }

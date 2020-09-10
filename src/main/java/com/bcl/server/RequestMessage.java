@@ -7,15 +7,15 @@ import java.io.InputStreamReader;
 import java.util.Hashtable;
 
 /**
- * Stores information about a Http request
+ * Stores information about a HTTP request
  */
 public class RequestMessage {
     private String Method;
     private String ProtocolVersion;
     private String Path;
 
-    private Hashtable<String, String> Parameters;
-    private final Hashtable<String, String> Headers;
+    private Hashtable<String, String> Parameters; // Holds all the parameters of the request
+    private final Hashtable<String, String> Headers; // Holds all the headers of the request
 
     /**
      * Parses an InputStream HTTP request into a HashTable
@@ -45,7 +45,10 @@ public class RequestMessage {
         }
     }
 
-    public void parseParameters() {
+    /**
+     * Parse all of the parameters, and get rid of the parameters from the path variable
+     */
+    private void parseParameters() {
         if (Path.contains("?")) {
             String params = getPath().substring(Path.indexOf("?") + 1);
             Path = Path.replace("?"+params, ""); // Cut out the parameters from the path
@@ -61,6 +64,7 @@ public class RequestMessage {
 
     }
 
+    //Getters
     public Hashtable<String, String> getHeaders() { return Headers; }
     public Hashtable<String, String> getParameters() { return Parameters; }
     public String getMethod() { return Method; }

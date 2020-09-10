@@ -27,11 +27,21 @@ public class HttpServer {
         //this.startListening();
     }
 
+    /**
+     * Specify a RequestHandler to handle a specific request at a given path
+     * @param path The path to handle
+     * @param handler The class that handles the request
+     */
     public void handlePath(String path, RequestHandler handler) {
         RequestPaths.put(path, handler);
     }
 
-    private void handleRequestFromPath(RequestMessage req, ResponseMessage resp) {
+    /**
+     * Used by the server to handle a request
+     * @param req
+     * @param resp
+     */
+    private void handleRequest(RequestMessage req, ResponseMessage resp) {
         String path = req.getPath();
 
         if (RequestPaths.containsKey(path)) {
@@ -47,6 +57,9 @@ public class HttpServer {
         }
     }
 
+    /**
+     * Start listening to the port
+     */
     public void startListening() {
         listening = true;
         System.out.println("Server is listening on port " + serverSocket.getLocalPort());
@@ -56,7 +69,7 @@ public class HttpServer {
                 socket = serverSocket.accept();
                 RequestMessage req = new RequestMessage(socket.getInputStream());
                 ResponseMessage resp = new ResponseMessage(socket);
-                handleRequestFromPath(req, resp);
+                handleRequest(req, resp);
             } catch (IOException e) {
                 e.printStackTrace();
             }
