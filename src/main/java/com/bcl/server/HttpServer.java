@@ -40,10 +40,10 @@ public class HttpServer {
             } else if (req.getMethod().equals("POST")) {
                 RequestPaths.get(path).POST(req, resp);
             } else {
-                resp.sendText(404, "Path not found");
+                resp.sendText(405, "Method is not supported");
             }
         } else {
-            resp.sendText(404, "Method doesn't work");
+            resp.sendText(404, "File not found");
         }
     }
 
