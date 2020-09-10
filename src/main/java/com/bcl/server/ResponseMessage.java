@@ -4,6 +4,7 @@ import java.io.*;
 import java.net.Socket;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.Scanner;
 
 public class ResponseMessage {
     private SimpleDateFormat date = new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss z"); // Used for adding time to the headers
@@ -28,6 +29,11 @@ public class ResponseMessage {
         outputPrintWriter.print("Transfer-Encoding: chunked\r\n\r\n");
     }
 
+    private void writeLineToSocket(String line) {
+        outputPrintWriter.print(Integer.toHexString(line.length()) + "\r\n");
+        outputPrintWriter.print(line + "\r\n");
+    }
+
     public void sendText(int statusCode, String data) {
         this.writeHeaders(statusCode, "text/plain");
         outputPrintWriter.print(Integer.toHexString(data.length()) + "\r\n");
@@ -41,7 +47,33 @@ public class ResponseMessage {
         }
     }
 
+    public void sendHtml(String fileToSend) {
+        File file = new File(fileToSend);
 
+        if (file.canRead() && file.exists()) {
+            try {
+                Scanner scanner = null;
+                scanner = new Scanner(file);
+
+                this.writeHeaders(200, "text/html");
+                while (scanner.hasNextLine()) {
+                    writeLineToSocket(scanner.nextLine());
+                }
+                outputPrintWriter.print("0\r\n\r\n");
+                outputPrintWriter.close();
+                scanner.close();
+                socket.close();
+            } catch (FileNotFoundException e) {
+                e.printStackTrace();
+                sendText(404, "File not found");
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        } else {
+            System.out.println("The file " + file.getAbsolutePath() + " either does not exist or cannot be read");
+            sendText(404, "File not found");
+        }
+    }
 
     public void send(int statusCode) {
         this.writeHeaders(statusCode, "text/plain");
