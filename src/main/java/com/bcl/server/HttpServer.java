@@ -1,6 +1,6 @@
 package com.bcl.server;
 
-import com.bcl.controllers.index;
+import com.bcl.genericControllers.getFileHandler;
 
 import java.io.*;
 import java.net.Socket;
@@ -25,6 +25,34 @@ public class HttpServer {
             e.printStackTrace();
         }
         //this.startListening();
+    }
+
+    /**
+     * Allows serving a directory full of files and, optionally, it's sub-directories.
+     * Having an index.html file will automatically send that file when a user is on the root of the folder
+     * E.G. You pass in the folder "test" with the rootPath as "/testing/" and the folder directory is "test/example/index.html". When the user goes to /testing/example, they will be sent test/example/index.html
+     * @param rootPath The root of the path to handle
+     * @param folder The given folder of files to send to clients
+     * @param iterateThroughFolders Whether or not to iterate through found folders
+     */
+    public void handlePathWithDirectory(String rootPath, File folder, boolean iterateThroughFolders) {
+        String initialDirectory = folder.getAbsolutePath();
+        if (folder.isDirectory() && folder.exists() && folder.canRead()) {
+            for (File file : folder.listFiles()) {
+                if (iterateThroughFolders && file.isDirectory()) {
+                    handlePathWithDirectory(rootPath + (rootPath.equals("/") ? "" : "/") + file.getName(), file, true);
+                } else if(file.isFile()) {
+                    String pathToHandle;
+                    if (file.getName().equals("index.html")) {
+                        pathToHandle = rootPath;
+
+                    } else {
+                        pathToHandle = rootPath + (rootPath.equals("/") ? "" : "/") + file.getName();
+                    }
+                    RequestPaths.put(pathToHandle, new getFileHandler(file));
+                }
+            }
+        }
     }
 
     /**
