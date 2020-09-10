@@ -70,16 +70,32 @@ public class ResponseMessage {
     }
 
     /**
-     * Send HTML file to the client
-     * @param fileToSend The HTML file to send
+     * Sends a file and tries to set the ContentType automatically
+     * @param fileToSend The file to send
      */
-    public void sendHtml(File fileToSend) {
+    public void sendFile(File fileToSend) {
+        String[] split = fileToSend.getName().split("\\.");
+        String fileType = split.length > 1 ? split[split.length-1].toLowerCase() : null;
+
+        if (fileType.equals("html")) {
+            sendTextFile(fileToSend, "text/html");
+        } else if (fileType.equals("css")) {
+            sendTextFile(fileToSend, "text/css");
+        }
+    }
+
+    /**
+     * Send a file of sub-content-type "text" (e.g. text/css, text/html);
+     * @param fileToSend The file to send
+     * @param contentType The Text/ContentType to send (e.g. "text/css", "text/html");
+     */
+    public void sendTextFile(File fileToSend, String contentType) {
         if (fileToSend.canRead() && fileToSend.exists()) {
             try {
                 Scanner scanner = null;
                 scanner = new Scanner(fileToSend);
 
-                this.writeHeaders(200, "text/html");
+                this.writeHeaders(200, contentType);
                 while (scanner.hasNextLine()) {
                     writeLineToSocket(scanner.nextLine());
                 }
@@ -96,7 +112,7 @@ public class ResponseMessage {
     }
 
     /**
-     * Send a simple resposne back
+     * Send a simple response back
      * @param statusCode The status code of the response
      */
     public void send(int statusCode) {
