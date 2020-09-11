@@ -1,6 +1,6 @@
 package com.bcl.server;
 
-import com.bcl.genericControllers.getFileHandler;
+import com.bcl.genericHandlers.GETFileHandler;
 
 import java.io.*;
 import java.net.Socket;
@@ -49,7 +49,7 @@ public class HttpServer {
                     } else {
                         pathToHandle = rootPath + (rootPath.equals("/") ? "" : "/") + file.getName();
                     }
-                    RequestPaths.put(pathToHandle, new getFileHandler(file));
+                    RequestPaths.put(pathToHandle, new GETFileHandler(file));
                 }
             }
         }

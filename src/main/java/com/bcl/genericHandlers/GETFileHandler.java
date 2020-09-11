@@ -1,4 +1,4 @@
-package com.bcl.genericControllers;
+package com.bcl.genericHandlers;
 
 import com.bcl.server.RequestHandler;
 import com.bcl.server.RequestMessage;
@@ -9,10 +9,10 @@ import java.io.File;
 /**
  * Handles the given file
  */
-public class getFileHandler implements RequestHandler {
+public class GETFileHandler implements RequestHandler {
     File fileToSend;
 
-    public getFileHandler(File fileToSend) {
+    public GETFileHandler(File fileToSend) {
         this.fileToSend = fileToSend;
     }
 
