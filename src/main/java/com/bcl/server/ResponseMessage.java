@@ -3,7 +3,6 @@ package com.bcl.server;
 import javax.imageio.ImageIO;
 import java.io.*;
 import java.net.Socket;
-import java.nio.file.Files;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Scanner;
@@ -86,20 +85,23 @@ public class ResponseMessage {
         this.closeSocket();
     }
 
+
     /**
      * Sends a file and tries to set the ContentType automatically
      * @param fileToSend The file to send
      */
     public void sendFile(File fileToSend) {
         try {
-            String mime = Files.probeContentType(fileToSend.toPath());
+            String mime = MimeTypeGetter.get(fileToSend);
             String mimeType = mime.split("/")[0];
             switch(mimeType) {
+                case "application":
                 case "text":
                     sendTextFile(fileToSend, mime);
                     break;
                 case "image":
                     sendImageFile(fileToSend, mime);
+                    break;
             }
         } catch (IOException e) {
             e.printStackTrace();
