@@ -70,19 +70,21 @@ public class HttpServer {
      * @param resp
      */
     private void handleRequest(RequestMessage req, ResponseMessage resp) {
-        String path = req.getPath();
+        new Thread(() -> {
+            String path = req.getPath();
 
-        if (RequestPaths.containsKey(path)) {
-            if (req.getMethod().equals("GET")) {
-                RequestPaths.get(path).GET(req, resp);
-            } else if (req.getMethod().equals("POST")) {
-                RequestPaths.get(path).POST(req, resp);
+            if (RequestPaths.containsKey(path)) {
+                if (req.getMethod().equals("GET")) {
+                    RequestPaths.get(path).GET(req, resp);
+                } else if (req.getMethod().equals("POST")) {
+                    RequestPaths.get(path).POST(req, resp);
+                } else {
+                    resp.sendText(405, "Method is not supported");
+                }
             } else {
-                resp.sendText(405, "Method is not supported");
+                resp.sendText(404, "File not found");
             }
-        } else {
-            resp.sendText(404, "File not found");
-        }
+        }).start();
     }
 
     /**
@@ -90,17 +92,20 @@ public class HttpServer {
      */
     public void startListening() {
         listening = true;
-        System.out.println("Server is listening on port " + serverSocket.getLocalPort());
-        while (listening) {
-            Socket socket;
-            try {
-                socket = serverSocket.accept();
-                RequestMessage req = new RequestMessage(socket.getInputStream());
-                ResponseMessage resp = new ResponseMessage(socket);
-                handleRequest(req, resp);
-            } catch (IOException e) {
-                e.printStackTrace();
+        new Thread(() -> {
+            while (listening) {
+                Socket socket;
+                try {
+                    socket = serverSocket.accept();
+                    RequestMessage req = new RequestMessage(socket.getInputStream());
+                    ResponseMessage resp = new ResponseMessage(socket);
+                    handleRequest(req, resp);
+
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
             }
-        }
+        }).start();
+        System.out.println("Server is listening on port " + serverSocket.getLocalPort());
     }
 }
