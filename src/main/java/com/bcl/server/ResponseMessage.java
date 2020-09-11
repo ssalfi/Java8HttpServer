@@ -1,7 +1,9 @@
 package com.bcl.server;
 
+import javax.imageio.ImageIO;
 import java.io.*;
 import java.net.Socket;
+import java.nio.file.Files;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Scanner;
@@ -59,6 +61,21 @@ public class ResponseMessage {
     }
 
     /**
+     * Send an image file to the client
+     * @param image The image file to send
+     * @param mime The mime type of the image
+     */
+    public void sendImageFile(File image, String mime) {
+        this.writeHeaders(200, mime);
+        try {
+            ImageIO.write(ImageIO.read(image), mime.split("/")[1], socket.getOutputStream() );
+            socket.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    /**
      * Send plain text to the client
      * @param statusCode The status code of the response
      * @param text The text to send
@@ -74,13 +91,18 @@ public class ResponseMessage {
      * @param fileToSend The file to send
      */
     public void sendFile(File fileToSend) {
-        String[] split = fileToSend.getName().split("\\.");
-        String fileType = split.length > 1 ? split[split.length-1].toLowerCase() : null;
-
-        if (fileType.equals("html")) {
-            sendTextFile(fileToSend, "text/html");
-        } else if (fileType.equals("css")) {
-            sendTextFile(fileToSend, "text/css");
+        try {
+            String mime = Files.probeContentType(fileToSend.toPath());
+            String mimeType = mime.split("/")[0];
+            switch(mimeType) {
+                case "text":
+                    sendTextFile(fileToSend, mime);
+                    break;
+                case "image":
+                    sendImageFile(fileToSend, mime);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 
